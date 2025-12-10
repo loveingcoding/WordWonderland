@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { WordLibrary, Word } from '../types';
 
@@ -17,17 +18,24 @@ const LibraryManager: React.FC<LibraryManagerProps> = ({ libraries, onAddLibrary
 
     const lines = rawWords.split('\n');
     const words: Word[] = lines.filter(l => l.includes(',')).map((line, idx) => {
-      const [text, translation, difficulty] = line.split(',').map(s => s.trim());
+      // Split by common comma separators (Chinese or English comma)
+      const parts = line.split(/[,，]/).map(s => s.trim());
+      if (parts.length < 2) return null;
+      
+      const text = parts[0];
+      const translation = parts[1];
+      const difficulty = parts[2] ? parseInt(parts[2]) : 1;
+
       return {
         id: `${newName}_${idx}`,
         text: text,
         translation: translation,
-        difficulty: (parseInt(difficulty) as 1|2|3) || 1
+        difficulty: (difficulty as 1|2|3) || 1
       };
-    });
+    }).filter(w => w !== null) as Word[];
 
     if (words.length === 0) {
-        alert("Please format words as: word, translation, difficulty (1-3)");
+        alert("请按照格式输入：单词, 翻译, 难度(1-3)");
         return;
     }
 
@@ -48,28 +56,28 @@ const LibraryManager: React.FC<LibraryManagerProps> = ({ libraries, onAddLibrary
   return (
     <div className="space-y-6">
        <div className="flex justify-between items-center">
-          <h2 className="text-3xl font-display font-bold text-gray-800">My Libraries</h2>
+          <h2 className="text-3xl font-display font-bold text-gray-800">我的词库</h2>
           <button 
             onClick={() => setIsCreating(!isCreating)}
             className="bg-brand-green text-white px-6 py-2 rounded-xl font-bold hover:bg-green-600 transition"
           >
-            {isCreating ? 'Cancel' : '➕ New Library'}
+            {isCreating ? '取消' : '➕ 新建词库'}
           </button>
        </div>
 
        {isCreating && (
          <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-200 animate-slide-in">
-            <h3 className="font-bold text-lg mb-4">Create New Pack</h3>
+            <h3 className="font-bold text-lg mb-4">创建新词库</h3>
             <div className="space-y-4">
                 <input 
                     type="text" 
-                    placeholder="Pack Name (e.g., My Hard Words)"
+                    placeholder="词库名称 (例如：我的易错词)"
                     className="w-full p-3 rounded-lg border border-gray-300"
                     value={newName}
                     onChange={e => setNewName(e.target.value)}
                 />
                 <div>
-                    <label className="block text-xs text-gray-500 mb-1">Format: english, translation, difficulty(1-3)</label>
+                    <label className="block text-xs text-gray-500 mb-1">格式: 英文, 中文, 难度(1-3) (每行一个)</label>
                     <textarea 
                         placeholder={`cat, 猫, 1\nastronaut, 宇航员, 3`}
                         className="w-full p-3 rounded-lg border border-gray-300 h-32"
@@ -81,7 +89,7 @@ const LibraryManager: React.FC<LibraryManagerProps> = ({ libraries, onAddLibrary
                     onClick={handleCreate}
                     className="w-full bg-brand-blue text-white py-3 rounded-xl font-bold"
                 >
-                    Save Pack
+                    保存词库
                 </button>
             </div>
          </div>
@@ -100,13 +108,13 @@ const LibraryManager: React.FC<LibraryManagerProps> = ({ libraries, onAddLibrary
                  <p className="text-gray-500 text-sm mt-2">{lib.description}</p>
                  <div className="mt-4 flex gap-2">
                     <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs font-bold">
-                        {lib.words.length} Words
+                        {lib.words.length} 个单词
                     </span>
                  </div>
                </div>
                <div className="mt-6 pt-4 border-t border-gray-100">
                   <div className="text-xs text-gray-400 truncate">
-                      Sample: {lib.words.slice(0,3).map(w => w.text).join(', ')}...
+                      例词: {lib.words.slice(0,3).map(w => w.text).join(', ')}...
                   </div>
                </div>
             </div>

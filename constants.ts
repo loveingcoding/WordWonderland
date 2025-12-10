@@ -1,4 +1,5 @@
-import { WordLibrary } from './types';
+
+import { WordLibrary, FingeringLesson } from './types';
 
 export const INITIAL_LIBRARIES: WordLibrary[] = [
   {
@@ -42,3 +43,41 @@ export const INITIAL_LIBRARIES: WordLibrary[] = [
 ];
 
 export const LEVEL_THRESHOLDS = [0, 100, 300, 600, 1000, 1500, 2500, 5000];
+
+export const FINGERING_LESSONS: FingeringLesson[] = [
+  {
+    id: 'lesson_1_home',
+    title: '第1关：基准键位 (Home Row)',
+    description: '把手指放在 ASDF 和 JKL; 上，不要移动哦！',
+    content: 'fff jjj ddd kkk sss lll aaa ;;; fjdksl a;sldkfj',
+    difficulty: 1
+  },
+  {
+    id: 'lesson_2_top',
+    title: '第2关：上排键位 (Top Row)',
+    description: '手指向上伸展，去够上面的键。',
+    content: 'rrr uuu eee iii www ooo qqq ppp rug pie top out',
+    difficulty: 1
+  },
+  {
+    id: 'lesson_3_bottom',
+    title: '第3关：下排键位 (Bottom Row)',
+    description: '手指向下弯曲，小心不要按错。',
+    content: 'vvv mmm ccc ,,, xxx ... zzz /// van man cab zen',
+    difficulty: 2
+  },
+  {
+    id: 'lesson_4_mixed',
+    title: '第4关：综合练习 (Mixed)',
+    description: '这是最后的特训，准备好了吗？',
+    content: 'the quick brown fox jumps over the lazy dog',
+    difficulty: 3
+  },
+  {
+    id: 'game_spider',
+    title: '🏆 挑战：蜘蛛射击 (Boss)',
+    description: '保护你的蛋糕！击落掉下来的字母蜘蛛！',
+    content: '', // Game mode
+    difficulty: 4
+  }
+];

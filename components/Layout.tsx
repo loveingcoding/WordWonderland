@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { UserProgress, GameMode } from '../types';
 
@@ -12,11 +13,12 @@ const Layout: React.FC<LayoutProps> = ({ children, user, onNavigate, currentMode
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navItems = [
-    { id: 'HOME', label: '🏠 Home', color: 'text-gray-700' },
-    { id: GameMode.TYPING, label: '⌨️ Typing Practice', color: 'text-brand-blue' },
-    { id: GameMode.AI_CHAT, label: '🤖 AI Tutor', color: 'text-brand-purple' },
-    { id: GameMode.VIDEO_MAKER, label: '🎬 Magic Video', color: 'text-brand-orange' },
-    { id: 'LIBRARY', label: '📚 My Library', color: 'text-brand-green' },
+    { id: 'HOME', label: '🏠 首页', color: 'text-gray-700' },
+    { id: GameMode.FINGERING, label: '🖐️ 指法闯关', color: 'text-brand-purple' },
+    { id: GameMode.TYPING, label: '⌨️ 单词拼写', color: 'text-brand-blue' },
+    { id: GameMode.AI_CHAT, label: '🤖 AI 老师', color: 'text-brand-green' },
+    { id: GameMode.VIDEO_MAKER, label: '🎬 魔法视频', color: 'text-brand-orange' },
+    { id: 'LIBRARY', label: '📚 我的词库', color: 'text-gray-600' },
   ];
 
   return (
@@ -33,7 +35,7 @@ const Layout: React.FC<LayoutProps> = ({ children, user, onNavigate, currentMode
           <div className="bg-brand-yellow/20 p-4 rounded-xl border border-brand-yellow text-center mb-6">
             <div className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Level {user.level}</div>
             <div className="text-2xl font-display font-bold text-gray-800">{user.xp} XP</div>
-            <div className="mt-2 text-sm font-medium text-brand-orange">⭐ {user.stars} Stars</div>
+            <div className="mt-2 text-sm font-medium text-brand-orange">⭐ {user.stars} 星星</div>
           </div>
 
           <nav className="space-y-2">

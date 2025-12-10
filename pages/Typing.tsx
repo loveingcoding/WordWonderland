@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Word, WordLibrary } from '../types';
+
+import React, { useState, useEffect, useRef } from 'react';
+import { WordLibrary } from '../types';
 import { explainWord } from '../services/gemini';
 import { addXp } from '../services/storage';
 
@@ -69,20 +70,20 @@ const Typing: React.FC<TypingProps> = ({ libraries, onFinish }) => {
   };
 
   if (!activeLibrary || !currentWord) {
-    return <div className="text-center p-10">Please select a library to start!</div>;
+    return <div className="text-center p-10">请选择一个词库开始！</div>;
   }
 
   return (
     <div className="flex flex-col items-center justify-center h-full max-w-2xl mx-auto">
       {showConfetti && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/50 pointer-events-none">
-          <div className="text-6xl animate-bounce">🎉 AWESOME! 🎉</div>
+          <div className="text-6xl animate-bounce">🎉 太棒了！ 🎉</div>
         </div>
       )}
 
       {/* Library Selector */}
       <div className="mb-8 w-full">
-        <label className="block text-sm font-bold text-gray-500 mb-2 uppercase tracking-wide">Choose Word Pack</label>
+        <label className="block text-sm font-bold text-gray-500 mb-2 uppercase tracking-wide">选择词库</label>
         <select 
           value={activeLibraryId} 
           onChange={(e) => {
@@ -94,7 +95,7 @@ const Typing: React.FC<TypingProps> = ({ libraries, onFinish }) => {
           className="w-full p-4 rounded-2xl border-2 border-gray-200 text-lg font-bold bg-white focus:border-brand-blue focus:ring-0 transition-colors"
         >
           {libraries.map(lib => (
-            <option key={lib.id} value={lib.id}>{lib.name} ({lib.words.length} words)</option>
+            <option key={lib.id} value={lib.id}>{lib.name} ({lib.words.length} 个单词)</option>
           ))}
         </select>
       </div>
@@ -125,7 +126,7 @@ const Typing: React.FC<TypingProps> = ({ libraries, onFinish }) => {
               type="text"
               value={userInput}
               onChange={handleInputChange}
-              placeholder="Type the word here..."
+              placeholder="在这里输入单词..."
               className={`w-full text-center text-3xl font-bold p-6 rounded-2xl border-4 outline-none transition-all duration-300 placeholder-gray-300
                 ${feedback === 'correct' ? 'border-brand-green bg-green-50 text-brand-green' : 
                   feedback === 'wrong' ? 'border-brand-orange bg-red-50 text-brand-orange animate-pulse' : 
@@ -149,21 +150,21 @@ const Typing: React.FC<TypingProps> = ({ libraries, onFinish }) => {
                   <span className="animate-spin">🌀</span>
                 ) : (
                   <>
-                    <span>💡 Need a hint?</span>
+                    <span>💡 需要提示吗？</span>
                   </>
                 )}
               </button>
             ) : (
               <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100 text-center animate-fade-in w-full">
                 <p className="text-indigo-900 font-bold mb-1">"{aiHint.definition}"</p>
-                <p className="text-indigo-600 italic">Example: {aiHint.sentence}</p>
+                <p className="text-indigo-600 italic">例句: {aiHint.sentence}</p>
               </div>
             )}
           </div>
 
           <div className="flex justify-between items-center text-gray-400 text-sm font-bold uppercase tracking-wider">
-            <span>Word {currentWordIndex + 1} of {activeLibrary.words.length}</span>
-            <span>Typing Practice</span>
+            <span>第 {currentWordIndex + 1} 个 / 共 {activeLibrary.words.length} 个</span>
+            <span>打字练习模式</span>
           </div>
         </div>
       </div>
