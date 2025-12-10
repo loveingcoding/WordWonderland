@@ -48,29 +48,36 @@ export const FINGERING_LESSONS: FingeringLesson[] = [
   {
     id: 'lesson_1_home',
     title: '第1关：基准键位 (Home Row)',
-    description: '把手指放在 ASDF 和 JKL; 上，不要移动哦！',
-    content: 'fff jjj ddd kkk sss lll aaa ;;; fjdksl a;sldkfj',
+    description: '把手指放在 ASDF 和 JKL 上，保持不动哦！',
+    content: 'aaa sss ddd fff jjj kkk lll dad sad lad',
     difficulty: 1
   },
   {
     id: 'lesson_2_top',
     title: '第2关：上排键位 (Top Row)',
-    description: '手指向上伸展，去够上面的键。',
-    content: 'rrr uuu eee iii www ooo qqq ppp rug pie top out',
+    description: '手指向上伸展，去按上面的键。',
+    content: 'qqq www eee rrr ttt yyy uuu iii ooo ppp top pot',
     difficulty: 1
   },
   {
     id: 'lesson_3_bottom',
     title: '第3关：下排键位 (Bottom Row)',
-    description: '手指向下弯曲，小心不要按错。',
-    content: 'vvv mmm ccc ,,, xxx ... zzz /// van man cab zen',
+    description: '手指向下，按底部的字母。',
+    content: 'zzz xxx ccc vvv bbb nnn mmm van cab ban',
     difficulty: 2
   },
   {
-    id: 'lesson_4_mixed',
-    title: '第4关：综合练习 (Mixed)',
-    description: '这是最后的特训，准备好了吗？',
-    content: 'the quick brown fox jumps over the lazy dog',
+    id: 'lesson_4_alphabet',
+    title: '第4关：字母表大挑战 (A-Z)',
+    description: '按顺序打出26个字母，你可以的！',
+    content: 'abcdefghijklmnopqrstuvwxyz',
+    difficulty: 2
+  },
+  {
+    id: 'lesson_5_words',
+    title: '第5关：简单单词 (Words)',
+    description: '尝试拼写一些简单的单词。',
+    content: 'apple banana cat dog egg fish girl hat',
     difficulty: 3
   },
   {
