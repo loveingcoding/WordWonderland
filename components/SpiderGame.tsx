@@ -13,7 +13,7 @@ interface Fly {
   x: number;
   y: number;
   speed: number;
-  wobbleOffset: number; // For sine wave movement
+  wobbleOffset: number;
 }
 
 interface WebShot {
@@ -36,64 +36,56 @@ interface Particle {
   color: string;
 }
 
-// --- DIFFICULTY MANAGER ---
-class DifficultyManager {
-  static getLevel(score: number): number {
-    if (score < 200) return 1;
-    if (score < 500) return 2;
-    return 3;
-  }
-
-  static getLevelDescription(level: number): string {
-    switch (level) {
-      case 1: return "LV 1: 基准键 (Home Row)";
-      case 2: return "LV 2: 全键盘 (A-Z)";
-      case 3: return "LV 3: 大师 (Aa-Zz)";
-      default: return "Unknown";
-    }
-  }
-
-  static getLetterPool(level: number): string {
-    switch (level) {
-      case 1: return "asdfjkl";
-      case 2: return "abcdefghijklmnopqrstuvwxyz";
-      case 3: return "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-      default: return "asdfjkl";
-    }
-  }
-
-  static getDropSpeed(score: number): number {
-    // Base speed 1.0, increases by 0.5 every 100 points
-    return 1 + Math.floor(score / 100) * 0.5;
-  }
-
-  static getSpawnRate(score: number): number {
-    // Base 1500ms, decreases by 50ms every 100 points, capped at 400ms
-    const rate = 1500 - Math.floor(score / 100) * 50;
-    return Math.max(400, rate);
-  }
+// --- STAGE CONFIGURATION ---
+interface StageData {
+  level: number;
+  speed: number;      // Constant drop speed
+  spawnRate: number;  // ms between spawns
+  goal: number;       // Number of kills to advance
+  pool: string;       // Available letters
+  description: string;
 }
+
+const STAGE_CONFIG: StageData[] = [
+  { level: 1, speed: 2.0, spawnRate: 1500, goal: 20, pool: "asdfjkl", description: "Stage 1: Basics" },
+  { level: 2, speed: 3.0, spawnRate: 1200, goal: 25, pool: "abcdefghijklmnopqrstuvwxyz", description: "Stage 2: Full Keypad" },
+  { level: 3, speed: 4.0, spawnRate: 1000, goal: 30, pool: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ", description: "Stage 3: Mixed Case" },
+  { level: 4, speed: 5.0, spawnRate: 800,  goal: 35, pool: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ", description: "Stage 4: Expert" },
+  { level: 5, speed: 6.0, spawnRate: 600,  goal: 40, pool: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ", description: "Stage 5: Master" },
+];
 
 const SpiderGame: React.FC<SpiderGameProps> = ({ onGameOver, onExit }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  
+  // React State for UI
   const [score, setScore] = useState(0);
-  const [level, setLevel] = useState(1);
-  const [webHealth, setWebHealth] = useState(100); // 0-100%
+  const [stageIndex, setStageIndex] = useState(0); // 0-based index for STAGE_CONFIG
+  const [stageProgress, setStageProgress] = useState(0);
+  const [webHealth, setWebHealth] = useState(100);
   const [combo, setCombo] = useState(0);
   const [gameActive, setGameActive] = useState(true);
+  const [transitionMsg, setTransitionMsg] = useState<string | null>(null);
 
-  // Game loop state refs
+  // Mutable Game State (Refs for loop performance)
   const stateRef = useRef({
     flies: [] as Fly[],
     shots: [] as WebShot[],
     particles: [] as Particle[],
     lastSpawn: 0,
     score: 0,
-    level: 1,
+    stageIndex: 0,
+    stageProgress: 0,
     webHealth: 100,
     combo: 0,
     gameActive: true,
+    isTransitioning: false, // Pauses spawning during level up
   });
+
+  const getCurrentStage = () => {
+    const idx = stateRef.current.stageIndex;
+    // Cap at the last defined stage if user goes beyond
+    return STAGE_CONFIG[Math.min(idx, STAGE_CONFIG.length - 1)];
+  };
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -101,7 +93,7 @@ const SpiderGame: React.FC<SpiderGameProps> = ({ onGameOver, onExit }) => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Responsive Canvas
+    // Resize Logic
     const resize = () => {
         canvas.width = canvas.parentElement?.clientWidth || 800;
         canvas.height = 600;
@@ -112,22 +104,19 @@ const SpiderGame: React.FC<SpiderGameProps> = ({ onGameOver, onExit }) => {
     let animationId: number;
 
     const spawnFly = (now: number) => {
-        const currentLevel = stateRef.current.level;
-        const chars = DifficultyManager.getLetterPool(currentLevel);
+        const stage = getCurrentStage();
+        const chars = stage.pool;
         const char = chars[Math.floor(Math.random() * chars.length)];
         
         const padding = 50;
         const x = Math.random() * (canvas.width - padding * 2) + padding;
-        
-        // Difficulty scaling
-        const speed = DifficultyManager.getDropSpeed(stateRef.current.score);
         
         stateRef.current.flies.push({
             id: now,
             char,
             x,
             y: -30,
-            speed: speed,
+            speed: stage.speed, // Constant speed per stage
             wobbleOffset: Math.random() * Math.PI * 2
         });
 
@@ -148,40 +137,58 @@ const SpiderGame: React.FC<SpiderGameProps> = ({ onGameOver, onExit }) => {
         }
     };
 
+    const triggerStageClear = () => {
+        stateRef.current.isTransitioning = true;
+        
+        // Show Message
+        const nextLevel = stateRef.current.stageIndex + 2; // +1 for next, +1 for 1-based display
+        setTransitionMsg(`STAGE ${stateRef.current.stageIndex + 1} COMPLETE!`);
+        
+        // Clear Screen
+        stateRef.current.flies = [];
+        stateRef.current.shots = [];
+
+        // Pause for 2 seconds then advance
+        setTimeout(() => {
+            stateRef.current.stageIndex += 1;
+            stateRef.current.stageProgress = 0;
+            stateRef.current.isTransitioning = false;
+            
+            // Update UI State
+            setStageIndex(stateRef.current.stageIndex);
+            setStageProgress(0);
+            setTransitionMsg(null);
+        }, 2000);
+    };
+
     const update = (time: number) => {
         if (!stateRef.current.gameActive) return;
 
-        // Update Level based on score
-        const newLevel = DifficultyManager.getLevel(stateRef.current.score);
-        if (newLevel !== stateRef.current.level) {
-            stateRef.current.level = newLevel;
-            setLevel(newLevel); // Update React state for UI
-        }
-
         const { width, height } = canvas;
-        
-        // 1. Spawning
-        const spawnRate = DifficultyManager.getSpawnRate(stateRef.current.score);
-        if (time - stateRef.current.lastSpawn > spawnRate) {
-            spawnFly(time);
+        const stage = getCurrentStage();
+
+        // 1. Spawning (Only if not transitioning)
+        if (!stateRef.current.isTransitioning) {
+            if (time - stateRef.current.lastSpawn > stage.spawnRate) {
+                spawnFly(time);
+            }
         }
 
         // 2. Update Flies
         stateRef.current.flies.forEach(fly => {
             fly.y += fly.speed;
-            // Wobble effect
             fly.x += Math.sin((fly.y * 0.05) + fly.wobbleOffset) * 0.5;
         });
 
-        // 3. Collision Logic (Fly hits Web)
+        // 3. Collision Logic (Fly hits Web/Bottom)
         const hitBottom = stateRef.current.flies.filter(f => f.y > height - 40);
         if (hitBottom.length > 0) {
-            stateRef.current.webHealth -= hitBottom.length * 15; // Damage
-            stateRef.current.combo = 0; // Reset combo
+            stateRef.current.webHealth -= hitBottom.length * 10; 
+            stateRef.current.combo = 0; 
+            
             setWebHealth(stateRef.current.webHealth);
             setCombo(0);
 
-            // Visual feedback for damage
             hitBottom.forEach(f => createExplosion(f.x, height-20, '#ef4444'));
 
             // Remove flies
@@ -196,7 +203,7 @@ const SpiderGame: React.FC<SpiderGameProps> = ({ onGameOver, onExit }) => {
         }
 
         // 4. Update Web Shots
-        const shotSpeed = 0.15; // Progress per frame
+        const shotSpeed = 0.2; 
         stateRef.current.shots.forEach(shot => {
             shot.progress += shotSpeed;
             const target = stateRef.current.flies.find(f => f.id === shot.targetId);
@@ -208,18 +215,31 @@ const SpiderGame: React.FC<SpiderGameProps> = ({ onGameOver, onExit }) => {
                 if (shot.progress >= 1) {
                     // Hit!
                     stateRef.current.flies = stateRef.current.flies.filter(f => f.id !== target.id);
+                    
+                    // Score & Combo
                     stateRef.current.score += 10;
                     stateRef.current.combo += 1;
                     
-                    // Repair mechanic
+                    // Stage Progress
+                    stateRef.current.stageProgress += 1;
+                    
+                    // Repair Mechanic
                     if (stateRef.current.combo % 10 === 0) {
                         stateRef.current.webHealth = Math.min(100, stateRef.current.webHealth + 15);
                         setWebHealth(stateRef.current.webHealth);
                     }
 
+                    // Check for Level Up
+                    if (stateRef.current.stageProgress >= stage.goal) {
+                        triggerStageClear();
+                    } else {
+                         // Only update progress UI if not clearing
+                         setStageProgress(stateRef.current.stageProgress);
+                    }
+
                     setScore(stateRef.current.score);
                     setCombo(stateRef.current.combo);
-                    createExplosion(target.x, target.y, '#facc15'); // Yellow explosion
+                    createExplosion(target.x, target.y, '#facc15'); 
                 }
             }
         });
@@ -251,7 +271,7 @@ const SpiderGame: React.FC<SpiderGameProps> = ({ onGameOver, onExit }) => {
         const playerX = width / 2;
         const playerY = height - 50;
 
-        // Draw The Broken Web (Health Bar)
+        // Draw Web Health Bar
         const webHeight = 20;
         const webY = height - webHeight;
         
@@ -265,8 +285,8 @@ const SpiderGame: React.FC<SpiderGameProps> = ({ onGameOver, onExit }) => {
         ctx.fillStyle = grad;
         ctx.fillRect(0, webY, healthWidth, webHeight);
 
-        // Web Pattern
-        ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+        // Web Visuals
+        ctx.strokeStyle = 'rgba(255,255,255,0.15)';
         ctx.beginPath();
         for(let i=0; i<width; i+=20) {
             ctx.moveTo(i, webY);
@@ -277,7 +297,6 @@ const SpiderGame: React.FC<SpiderGameProps> = ({ onGameOver, onExit }) => {
         // Draw Player (Spider)
         ctx.save();
         ctx.translate(playerX, playerY);
-        
         // Legs
         ctx.strokeStyle = '#9ca3af';
         ctx.lineWidth = 2;
@@ -285,13 +304,10 @@ const SpiderGame: React.FC<SpiderGameProps> = ({ onGameOver, onExit }) => {
             ctx.beginPath();
             ctx.moveTo(0, 0);
             ctx.quadraticCurveTo(-20, -10 + (i*5), -30, 10 + (i*5));
-            ctx.stroke();
-            ctx.beginPath();
             ctx.moveTo(0, 0);
             ctx.quadraticCurveTo(20, -10 + (i*5), 30, 10 + (i*5));
             ctx.stroke();
         }
-
         // Body
         ctx.fillStyle = '#1f2937';
         ctx.beginPath();
@@ -299,7 +315,6 @@ const SpiderGame: React.FC<SpiderGameProps> = ({ onGameOver, onExit }) => {
         ctx.fill();
         ctx.strokeStyle = '#4b5563';
         ctx.stroke();
-
         // Eyes
         ctx.fillStyle = '#fbbf24';
         ctx.beginPath();
@@ -312,30 +327,23 @@ const SpiderGame: React.FC<SpiderGameProps> = ({ onGameOver, onExit }) => {
         stateRef.current.flies.forEach(fly => {
             ctx.save();
             ctx.translate(fly.x, fly.y);
-            
             // Wings
             ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
             ctx.beginPath();
             ctx.ellipse(-10, -5, 12, 6, Math.PI/4, 0, Math.PI*2);
-            ctx.fill();
-            ctx.beginPath();
             ctx.ellipse(10, -5, 12, 6, -Math.PI/4, 0, Math.PI*2); 
             ctx.fill();
-
             // Body
             ctx.fillStyle = '#000';
             ctx.beginPath();
             ctx.arc(0, 0, 12, 0, Math.PI*2);
             ctx.fill();
-
             // Text
             ctx.fillStyle = '#fff';
-            ctx.font = 'bold 20px Nunito'; // Slightly bigger font
+            ctx.font = 'bold 20px Nunito'; 
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            // Render exact char (case sensitive for display)
             ctx.fillText(fly.char, 0, 0); 
-            
             ctx.restore();
         });
 
@@ -358,27 +366,41 @@ const SpiderGame: React.FC<SpiderGameProps> = ({ onGameOver, onExit }) => {
             ctx.fill();
             ctx.globalAlpha = 1;
         });
+
+        // Draw Transition Text
+        if (stateRef.current.isTransitioning && transitionMsg) {
+            ctx.fillStyle = 'rgba(0,0,0,0.5)';
+            ctx.fillRect(0, 0, width, height);
+
+            ctx.save();
+            ctx.translate(width/2, height/2);
+            ctx.fillStyle = '#FBBF24';
+            ctx.font = 'bold 60px "Fredoka", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(transitionMsg, 0, 0);
+            ctx.fillStyle = '#FFF';
+            ctx.font = '30px "Nunito", sans-serif';
+            ctx.fillText("Next Stage Incoming...", 0, 50);
+            ctx.restore();
+        }
     };
 
     const handleKeyDown = (e: KeyboardEvent) => {
-        if (!stateRef.current.gameActive) return;
+        if (!stateRef.current.gameActive || stateRef.current.isTransitioning) return;
         
         let key = e.key;
-        const currentLvl = stateRef.current.level;
+        const currentStage = getCurrentStage();
 
         // Input normalization based on level
-        // Level 1 & 2 are case-insensitive. Level 3 is strict.
-        if (currentLvl < 3) {
+        // Level 3+ (index 2+) is strict case. Below is insensitive.
+        if (stateRef.current.stageIndex < 2) {
             if (key.length === 1) key = key.toLowerCase();
         }
 
-        // Find targets
-        // We filter flies based on matching char.
-        // For Lev 1/2, flies are stored as lowercase (from pool), so key.toLowerCase() matches.
-        // For Lev 3, flies are mixed, so strict match works.
         const targets = stateRef.current.flies
             .filter(f => f.char === key)
-            .sort((a,b) => b.y - a.y); // Target closest to bottom
+            .sort((a,b) => b.y - a.y); 
         
         if (targets.length > 0) {
             const target = targets[0];
@@ -405,7 +427,9 @@ const SpiderGame: React.FC<SpiderGameProps> = ({ onGameOver, onExit }) => {
         window.removeEventListener('keydown', handleKeyDown);
         cancelAnimationFrame(animationId);
     };
-  }, []);
+  }, [transitionMsg]); // Add transitionMsg dependency to re-bind if needed, though ref handles most
+
+  const activeStage = STAGE_CONFIG[Math.min(stageIndex, STAGE_CONFIG.length - 1)];
 
   return (
     <div className="relative w-full h-full bg-slate-900 rounded-3xl overflow-hidden border-4 border-slate-700 shadow-2xl">
@@ -420,30 +444,29 @@ const SpiderGame: React.FC<SpiderGameProps> = ({ onGameOver, onExit }) => {
                  </div>
                  
                  <div className="bg-slate-800/90 px-4 py-2 rounded-xl border border-slate-600 backdrop-blur-sm">
-                     <div className="text-xs text-slate-400 font-bold uppercase">难度 Level</div>
+                     <div className="text-xs text-slate-400 font-bold uppercase">关卡 Stage</div>
                      <div className="text-lg font-display text-white font-bold whitespace-nowrap">
-                        {DifficultyManager.getLevelDescription(level)}
+                        {activeStage.level} <span className="text-xs text-gray-400 font-normal">({activeStage.description})</span>
                      </div>
                  </div>
 
                  <div className="bg-slate-800/90 px-4 py-2 rounded-xl border border-slate-600 backdrop-blur-sm">
-                     <div className="text-xs text-slate-400 font-bold uppercase">连击 Combo</div>
-                     <div className={`text-2xl font-display font-bold ${combo > 5 ? 'text-orange-400 animate-pulse' : 'text-blue-300'}`}>
-                        {combo}
+                     <div className="text-xs text-slate-400 font-bold uppercase">进度 Progress</div>
+                     <div className="text-xl font-display text-blue-300 font-bold">
+                        {stageProgress} / <span className="text-sm text-gray-400">{activeStage.goal}</span>
                      </div>
                  </div>
              </div>
 
              <div className="bg-slate-800/90 px-4 py-2 rounded-xl border border-slate-600 backdrop-blur-sm">
-                 <div className="text-xs text-slate-400 font-bold uppercase text-right">防御网 Health</div>
+                 <div className="text-xs text-slate-400 font-bold uppercase text-right">网 Health</div>
                  <div className="flex items-center gap-2 mt-1">
-                     <div className="w-32 h-3 bg-slate-700 rounded-full overflow-hidden">
+                     <div className="w-24 md:w-32 h-3 bg-slate-700 rounded-full overflow-hidden">
                          <div 
                             className={`h-full transition-all duration-300 ${webHealth < 30 ? 'bg-red-500' : 'bg-green-500'}`}
                             style={{ width: `${webHealth}%` }}
                          />
                      </div>
-                     <span className="font-mono text-white text-sm">{Math.round(webHealth)}%</span>
                  </div>
              </div>
         </div>
@@ -451,8 +474,7 @@ const SpiderGame: React.FC<SpiderGameProps> = ({ onGameOver, onExit }) => {
         {/* Controls */}
         <button 
             onClick={onExit}
-            className="absolute top-4 right-4 pointer-events-auto bg-white/10 hover:bg-white/20 text-white px-3 py-1 rounded-lg text-sm font-bold backdrop-blur-sm transition"
-            style={{ marginTop: '60px' }} 
+            className="absolute top-4 right-4 pointer-events-auto bg-white/10 hover:bg-white/20 text-white px-3 py-1 rounded-lg text-sm font-bold backdrop-blur-sm transition mt-[60px]"
         >
             退出 Esc
         </button>
@@ -461,7 +483,7 @@ const SpiderGame: React.FC<SpiderGameProps> = ({ onGameOver, onExit }) => {
             <div className="absolute inset-0 bg-black/80 flex items-center justify-center pointer-events-auto z-50">
                 <div className="bg-white p-8 rounded-3xl text-center max-w-md animate-bounce-in border-4 border-brand-yellow">
                     <h2 className="text-4xl font-display font-bold text-slate-800 mb-2">防御失败! 🕸️</h2>
-                    <p className="text-gray-500 mb-6">蜘蛛网被攻破了！</p>
+                    <p className="text-gray-500 mb-6">在第 {stageIndex + 1} 关倒下了...</p>
                     
                     <div className="bg-slate-100 p-4 rounded-xl mb-6">
                         <div className="text-sm text-gray-500 uppercase font-bold">最终得分</div>
@@ -480,11 +502,10 @@ const SpiderGame: React.FC<SpiderGameProps> = ({ onGameOver, onExit }) => {
             </div>
         )}
 
-        {/* Start Overlay */}
-        {gameActive && score === 0 && combo === 0 && (
+        {gameActive && score === 0 && !stateRef.current.isTransitioning && (
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none opacity-50">
                 <div className="text-white text-xl font-bold animate-pulse">
-                    按下对应的字母发射蛛丝！
+                    按键发射蛛丝，守护网底！
                 </div>
             </div>
         )}
