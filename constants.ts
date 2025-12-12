@@ -1,5 +1,5 @@
 
-import { WordLibrary, FingeringLesson } from './types';
+import { WordLibrary, FingeringLesson, Lesson } from './types';
 
 export const INITIAL_LIBRARIES: WordLibrary[] = [
   {
@@ -83,8 +83,22 @@ export const FINGERING_LESSONS: FingeringLesson[] = [
   {
     id: 'game_spider',
     title: '🏆 挑战：蜘蛛射击 (Boss)',
-    description: '保护你的蛋糕！击落掉下来的字母蜘蛛！',
+    description: '保护你的蛋糕！击落蜘蛛！',
     content: '', // Game mode
     difficulty: 4
   }
 ];
+
+export const DEMO_LESSON: Lesson = {
+  id: 'unit_1',
+  title: 'Unit 1: Describing People',
+  videoId: 'placeholder',
+  words: [
+    { text: 'tall', phonetic: '/tɔːl/', translation: '高的', type: 'adj.', example: 'He is very tall.' },
+    { text: 'short', phonetic: '/ʃɔːrt/', translation: '矮的; 短的', type: 'adj.', example: 'The pencil is short.' },
+    { text: 'young', phonetic: '/jʌŋ/', translation: '年轻的', type: 'adj.', example: 'The baby is young.' },
+    { text: 'old', phonetic: '/oʊld/', translation: '老的; 旧的', type: 'adj.', example: 'My grandpa is old.' },
+    { text: 'funny', phonetic: '/ˈfʌn.i/', translation: '有趣的', type: 'adj.', example: 'The clown is funny.' },
+    { text: 'smart', phonetic: '/smɑːrt/', translation: '聪明的', type: 'adj.', example: 'She is a smart student.' }
+  ]
+};

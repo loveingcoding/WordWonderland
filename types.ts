@@ -45,7 +45,8 @@ export enum GameMode {
   FINGERING = 'FINGERING',
   FLASHCARD = 'FLASHCARD',
   AI_CHAT = 'AI_CHAT',
-  VIDEO_MAKER = 'VIDEO_MAKER'
+  VIDEO_MAKER = 'VIDEO_MAKER',
+  CLASSROOM = 'CLASSROOM'
 }
 
 export interface FingeringLesson {
@@ -54,4 +55,19 @@ export interface FingeringLesson {
   description: string;
   content: string; // The text to type
   difficulty: number;
+}
+
+export interface LessonWord {
+  text: string;
+  phonetic: string;
+  translation: string;
+  example: string;
+  type: string; // e.g., 'adj.', 'v.'
+}
+
+export interface Lesson {
+  id: string;
+  title: string;
+  videoId: string; // Placeholder for video source
+  words: LessonWord[];
 }

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { UserProgress, GameMode } from '../types';
 
@@ -13,81 +12,122 @@ const Layout: React.FC<LayoutProps> = ({ children, user, onNavigate, currentMode
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navItems = [
-    { id: 'HOME', label: '🏠 首页', color: 'text-gray-700' },
-    { id: GameMode.FINGERING, label: '🖐️ 指法闯关', color: 'text-brand-purple' },
-    { id: GameMode.TYPING, label: '⌨️ 单词拼写', color: 'text-brand-blue' },
-    { id: GameMode.AI_CHAT, label: '🤖 AI 老师', color: 'text-brand-green' },
-    { id: GameMode.VIDEO_MAKER, label: '🎬 魔法视频', color: 'text-brand-orange' },
-    { id: 'LIBRARY', label: '📚 我的词库', color: 'text-gray-600' },
+    { id: 'HOME', label: '🚀 基地', color: 'hover:text-brand-blue' },
+    { id: GameMode.VIDEO_MAKER, label: '🎬 魔法工作室', color: 'hover:text-brand-orange' },
+    { id: 'LIBRARY', label: '📚 档案库', color: 'hover:text-brand-green' },
   ];
 
+  // Logic to determine if we should wrap the children in a "Paper" container
+  // The Planet Map (HOME) looks best on the raw dark background.
+  // The Games/Tools (Typing, Library) look best in a bright container (for now).
+  const needsContainer = currentMode !== 'HOME';
+
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden font-sans">
-      {/* Sidebar for Desktop */}
-      <aside className="hidden md:flex flex-col w-64 bg-white border-r border-gray-200 shadow-sm">
-        <div className="p-6 flex items-center justify-center border-b border-gray-100">
-          <h1 className="text-2xl font-display font-bold text-brand-blue tracking-tight">
-            Word<span className="text-brand-orange">Wonder</span>
-          </h1>
-        </div>
-        
-        <div className="p-4">
-          <div className="bg-brand-yellow/20 p-4 rounded-xl border border-brand-yellow text-center mb-6">
-            <div className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Level {user.level}</div>
-            <div className="text-2xl font-display font-bold text-gray-800">{user.xp} XP</div>
-            <div className="mt-2 text-sm font-medium text-brand-orange">⭐ {user.stars} 星星</div>
+    <div className="flex flex-col min-h-screen font-sans text-slate-100">
+      
+      {/* Glassmorphism Top Navigation */}
+      <header className="sticky top-0 z-50 w-full backdrop-blur-md bg-slate-900/60 border-b border-slate-700/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-20">
+            
+            {/* Logo */}
+            <div className="flex-shrink-0 flex items-center cursor-pointer" onClick={() => onNavigate('HOME')}>
+              <div className="w-10 h-10 bg-gradient-to-br from-brand-blue to-brand-purple rounded-lg flex items-center justify-center text-xl shadow-lg mr-3">
+                🚀
+              </div>
+              <h1 className="text-2xl font-display font-bold tracking-tight text-white">
+                Type<span className="text-brand-blue">Hero</span>
+              </h1>
+            </div>
+
+            {/* Desktop Menu */}
+            <div className="hidden md:block">
+              <div className="ml-10 flex items-baseline space-x-8">
+                {navItems.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => onNavigate(item.id as any)}
+                    className={`px-3 py-2 rounded-md text-sm font-bold transition-all duration-200 ${
+                      currentMode === item.id 
+                        ? 'text-white bg-white/10 shadow-inner' 
+                        : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* User Stats */}
+            <div className="hidden md:flex items-center gap-4">
+               <div className="flex flex-col items-end">
+                  <span className="text-xs text-slate-400 uppercase font-bold tracking-wider">Level {user.level}</span>
+                  <div className="flex items-center gap-2">
+                     <span className="text-brand-yellow drop-shadow-md">⭐ {user.stars}</span>
+                     <span className="w-px h-4 bg-slate-600 mx-1"></span>
+                     <span className="text-brand-blue">{user.xp} XP</span>
+                  </div>
+               </div>
+               <div className="h-10 w-10 rounded-full bg-gradient-to-r from-brand-orange to-brand-yellow p-[2px]">
+                  <div className="h-full w-full rounded-full bg-slate-800 flex items-center justify-center text-lg">
+                    👩‍🚀
+                  </div>
+               </div>
+            </div>
+
+            {/* Mobile menu button */}
+            <div className="-mr-2 flex md:hidden">
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="inline-flex items-center justify-center p-2 rounded-md text-slate-400 hover:text-white hover:bg-slate-700 focus:outline-none"
+              >
+                <span className="sr-only">Open main menu</span>
+                {mobileMenuOpen ? '✖️' : '🍔'}
+              </button>
+            </div>
           </div>
-
-          <nav className="space-y-2">
-            {navItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => onNavigate(item.id as any)}
-                className={`w-full flex items-center px-4 py-3 rounded-xl transition-all duration-200 font-bold ${
-                  currentMode === item.id 
-                    ? 'bg-brand-blue text-white shadow-md transform scale-105' 
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                {item.label}
-              </button>
-            ))}
-          </nav>
         </div>
-      </aside>
 
-      {/* Mobile Header */}
-      <div className="md:hidden fixed top-0 w-full bg-white z-50 border-b border-gray-200 px-4 py-3 flex justify-between items-center shadow-sm">
-        <h1 className="text-xl font-display font-bold text-brand-blue">WordWonder</h1>
-        <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="text-2xl">
-          {mobileMenuOpen ? '✖️' : '🍔'}
-        </button>
-      </div>
+        {/* Mobile Menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden bg-slate-800 border-b border-slate-700">
+            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+              {navItems.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    onNavigate(item.id as any);
+                    setMobileMenuOpen(false);
+                  }}
+                  className={`block px-3 py-4 rounded-md text-base font-bold w-full text-left ${
+                    currentMode === item.id ? 'bg-slate-900 text-white' : 'text-slate-300 hover:bg-slate-700 hover:text-white'
+                  }`}
+                >
+                  {item.label}
+                </button>
+              ))}
+              <div className="border-t border-slate-700 pt-4 mt-4 px-3 flex justify-between items-center text-white font-bold">
+                 <span>⭐ {user.stars}</span>
+                 <span>XP {user.xp}</span>
+              </div>
+            </div>
+          </div>
+        )}
+      </header>
 
-      {/* Mobile Menu Overlay */}
-      {mobileMenuOpen && (
-        <div className="fixed inset-0 bg-white z-40 pt-20 px-6 space-y-4 md:hidden">
-           {navItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => {
-                  onNavigate(item.id as any);
-                  setMobileMenuOpen(false);
-                }}
-                className={`w-full text-left px-4 py-4 rounded-xl text-lg font-bold border-2 ${
-                   currentMode === item.id ? 'border-brand-blue bg-blue-50 text-brand-blue' : 'border-gray-100'
-                }`}
-              >
-                {item.label}
-              </button>
-            ))}
-        </div>
-      )}
-
-      {/* Main Content */}
-      <main className="flex-1 overflow-y-auto p-4 md:p-8 pt-20 md:pt-8 relative">
-        <div className="max-w-5xl mx-auto h-full">
-          {children}
+      {/* Main Content Area */}
+      <main className="flex-1 relative overflow-y-auto">
+        <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8 h-full">
+           {needsContainer ? (
+             <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl p-6 md:p-10 min-h-[80vh] text-gray-800 animate-slide-in">
+                {children}
+             </div>
+           ) : (
+             <div className="h-full animate-fade-in">
+                {children}
+             </div>
+           )}
         </div>
       </main>
     </div>

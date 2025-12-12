@@ -31,6 +31,8 @@ const KEY_FINGER_MAP: {[key: string]: string} = {
 
 const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({ activeChar }) => {
   const getHighlightColor = (key: string) => {
+    if (!activeChar) return 'bg-white border-gray-200 text-gray-500';
+
     const k = key.toLowerCase();
     const active = activeChar.toLowerCase();
     

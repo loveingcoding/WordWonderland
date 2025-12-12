@@ -3,8 +3,10 @@ import React, { useState, useEffect } from 'react';
 import Layout from './components/Layout';
 import Typing from './pages/Typing';
 import Fingering from './pages/Fingering';
+import Lesson from './pages/Lesson';
 import VideoGenerator from './components/VideoGenerator';
 import LibraryManager from './components/LibraryManager';
+import PlanetMap from './components/PlanetMap';
 import { 
   UserProgress, 
   GameMode, 
@@ -91,30 +93,14 @@ const App: React.FC = () => {
   return (
     <Layout user={user} onNavigate={handleNavigate} currentMode={currentMode}>
       {currentMode === 'HOME' && (
-         <div className="flex flex-col items-center justify-center h-full text-center space-y-8 animate-fade-in">
-            <h2 className="text-5xl md:text-6xl font-display font-bold text-gray-800">
-               你好, <span className="text-brand-blue">小探险家!</span> 👋
-            </h2>
-            <p className="text-xl text-gray-500 max-w-lg">
-               准备好学习新单词了吗？从菜单中选择一个游戏开始冒险吧！
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-4xl mt-8">
-               <button onClick={() => setCurrentMode(GameMode.FINGERING)} className="p-8 bg-brand-purple rounded-3xl shadow-lg hover:scale-105 transition transform text-left">
-                  <span className="text-4xl block mb-2">🖐️</span>
-                  <span className="text-2xl font-bold text-white">指法闯关</span>
-                  <p className="text-white opacity-80">从零开始学打字！</p>
-               </button>
-               <button onClick={() => setCurrentMode(GameMode.TYPING)} className="p-8 bg-brand-yellow rounded-3xl shadow-lg hover:scale-105 transition transform text-left">
-                  <span className="text-4xl block mb-2">⌨️</span>
-                  <span className="text-2xl font-bold text-gray-800">单词拼写</span>
-                  <p className="opacity-70">练习拼写，赢取星星！</p>
-               </button>
-               <button onClick={() => setCurrentMode(GameMode.VIDEO_MAKER)} className="p-8 bg-brand-orange rounded-3xl shadow-lg hover:scale-105 transition transform text-left">
-                  <span className="text-4xl block mb-2">🎬</span>
-                  <span className="text-2xl font-bold text-white">魔法视频</span>
-                  <p className="text-white opacity-80">用星星制作你的专属动画！</p>
-               </button>
+         <div className="flex flex-col items-center justify-center min-h-[80vh]">
+            <div className="text-center mb-4 z-10">
+               <h2 className="text-4xl md:text-5xl font-display font-bold text-white tracking-wide drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">
+                  选择你的 <span className="text-brand-blue">目的地</span>
+               </h2>
+               <p className="text-blue-200 mt-2">点击星球开始挑战</p>
             </div>
+            <PlanetMap onSelectPlanet={(mode) => setCurrentMode(mode)} />
          </div>
       )}
 
@@ -122,8 +108,14 @@ const App: React.FC = () => {
         <Fingering />
       )}
 
+      {/* Legacy Typing Mode (kept if needed, or mapped from Library) */}
       {currentMode === GameMode.TYPING && (
         <Typing libraries={libraries} onFinish={refreshData} />
+      )}
+
+      {/* New Classroom Mode */}
+      {currentMode === GameMode.CLASSROOM && (
+        <Lesson />
       )}
 
       {currentMode === GameMode.VIDEO_MAKER && (
@@ -139,32 +131,36 @@ const App: React.FC = () => {
       )}
 
       {currentMode === GameMode.AI_CHAT && (
-        <div className="flex flex-col h-[calc(100vh-140px)] bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-200">
-            <div className="bg-brand-green p-4 text-white font-bold flex items-center gap-2">
-                <span>🤖</span> AI 英语老师
+        <div className="flex flex-col h-[70vh]">
+            <div className="bg-brand-purple p-4 text-white font-bold flex items-center gap-2 rounded-t-xl">
+                <span>🤖</span> SENTENTIA - AI 语言实验室
             </div>
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
                 {chatHistory.length === 0 && (
-                    <div className="text-center text-gray-400 mt-10">说 "Hello" 开始练习吧！</div>
+                    <div className="text-center text-gray-400 mt-10">
+                        <div className="text-4xl mb-2">👋</div>
+                        准备好了吗？用英语和我聊天吧！
+                        <br/>Try saying: "Hello! Teach me about space."
+                    </div>
                 )}
                 {chatHistory.map((msg, idx) => (
                     <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-[80%] p-4 rounded-2xl ${msg.role === 'user' ? 'bg-brand-green text-white rounded-br-none' : 'bg-gray-100 text-gray-800 rounded-bl-none'}`}>
+                        <div className={`max-w-[80%] p-4 rounded-2xl shadow-sm ${msg.role === 'user' ? 'bg-brand-purple text-white rounded-br-none' : 'bg-white text-gray-800 border border-gray-200 rounded-bl-none'}`}>
                             {msg.parts[0].text}
                         </div>
                     </div>
                 ))}
-                {chatLoading && <div className="text-gray-400 text-sm ml-4">老师正在输入...</div>}
+                {chatLoading && <div className="text-gray-400 text-sm ml-4 animate-pulse">信号接收中...</div>}
             </div>
-            <div className="p-4 bg-gray-50 border-t border-gray-200 flex gap-2">
+            <div className="p-4 bg-white border-t border-gray-200 flex gap-2 rounded-b-xl">
                 <input 
-                    className="flex-1 p-3 rounded-xl border border-gray-300 outline-none focus:border-brand-green"
+                    className="flex-1 p-3 rounded-xl border border-gray-300 outline-none focus:border-brand-purple"
                     value={chatInput}
                     onChange={(e) => setChatInput(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && handleChat()}
-                    placeholder="输入消息..."
+                    placeholder="输入英语..."
                 />
-                <button onClick={handleChat} disabled={chatLoading} className="bg-brand-green text-white px-6 rounded-xl font-bold">发送</button>
+                <button onClick={handleChat} disabled={chatLoading} className="bg-brand-purple text-white px-6 rounded-xl font-bold hover:bg-purple-600 transition">发送</button>
             </div>
         </div>
       )}

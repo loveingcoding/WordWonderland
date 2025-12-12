@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>WordWonderland AI</title>
+    <title>TypeHero - WordWonderland</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;600;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
     <script>
@@ -20,7 +20,24 @@
                 orange: '#FF6B6B',
                 green: '#6BCB77',
                 blue: '#4D96FF',
-                purple: '#6C5CE7'
+                purple: '#6C5CE7',
+                dark: '#0F172A',
+                space: '#1e293b'
+              }
+            },
+            animation: {
+              'float': 'float 6s ease-in-out infinite',
+              'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+              'twinkle': 'twinkle 3s ease-in-out infinite',
+            },
+            keyframes: {
+              float: {
+                '0%, 100%': { transform: 'translateY(0)' },
+                '50%': { transform: 'translateY(-20px)' },
+              },
+              twinkle: {
+                '0%, 100%': { opacity: '0.2' },
+                '50%': { opacity: '1' },
               }
             }
           }
@@ -29,14 +46,26 @@
     </script>
     <style>
       body {
-        background-color: #F0F4F8;
+        /* Deep Space Gradient */
+        background: radial-gradient(ellipse at bottom, #1B2735 0%, #090A0F 100%);
+        color: #F0F4F8;
+        min-height: 100vh;
+        overflow-x: hidden;
       }
-      /* Fun scrollbar */
+      
+      /* Starry Background Helpers */
+      .star {
+        position: absolute;
+        background: white;
+        border-radius: 50%;
+      }
+      
+      /* Fun scrollbar adapted for dark mode */
       ::-webkit-scrollbar {
         width: 10px;
       }
       ::-webkit-scrollbar-track {
-        background: #f1f1f1; 
+        background: #090A0F; 
       }
       ::-webkit-scrollbar-thumb {
         background: #4D96FF; 
