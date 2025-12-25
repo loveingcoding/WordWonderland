@@ -16,6 +16,19 @@ export interface WordLibrary {
   isCustom: boolean;
 }
 
+export interface CourseCategory {
+  name: string;
+  words: { en: string; cn: string }[];
+}
+
+export interface Course {
+  id: string;
+  name: string;
+  description?: string;
+  categories: CourseCategory[];
+  isOfficial: boolean;
+}
+
 export interface UserProgress {
   xp: number;
   level: number;
@@ -59,10 +72,10 @@ export interface FingeringLesson {
 
 export interface LessonWord {
   text: string;
-  phonetic: string;
+  phonetic?: string;
   translation: string;
-  example: string;
-  type: string; // e.g., 'adj.', 'v.'
+  example?: string;
+  type?: string; // e.g., 'adj.', 'v.'
 }
 
 export interface Lesson {

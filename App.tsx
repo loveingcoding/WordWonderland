@@ -19,12 +19,16 @@ import {
   saveLibrary,
   deleteLibrary
 } from './services/storage';
+import { OFFICIAL_LIBRARIES } from './constants';
 import { chatWithTutor } from './services/gemini';
 
 const App: React.FC = () => {
   const [user, setUser] = useState<UserProgress>(getUserProgress());
   const [libraries, setLibraries] = useState<WordLibrary[]>(getLibraries());
   const [currentMode, setCurrentMode] = useState<string>('HOME');
+  
+  // Specific state for navigating to a specific library (e.g. Official Textbooks)
+  const [targetLibraryId, setTargetLibraryId] = useState<string | null>(null);
   
   // Chat state
   const [chatHistory, setChatHistory] = useState<{role: 'user' | 'model', parts: {text: string}[]}[]>([]);
@@ -43,6 +47,9 @@ const App: React.FC = () => {
 
   const handleNavigate = (mode: string) => {
     setCurrentMode(mode);
+    if (mode !== GameMode.TYPING) {
+        setTargetLibraryId(null);
+    }
   };
 
   const handleAddLibrary = (lib: WordLibrary) => {
@@ -53,6 +60,12 @@ const App: React.FC = () => {
   const handleDeleteLibrary = (id: string) => {
     deleteLibrary(id);
     setLibraries(getLibraries());
+  };
+
+  // Handle "Start" click from Library Manager (for Official or Custom books)
+  const handleStartLibrary = (id: string) => {
+      setTargetLibraryId(id);
+      setCurrentMode(GameMode.TYPING);
   };
 
   const handleDeductStars = (amount: number) => {
@@ -108,14 +121,18 @@ const App: React.FC = () => {
         <Fingering />
       )}
 
-      {/* Legacy Typing Mode (kept if needed, or mapped from Library) */}
+      {/* Drill Mode / Legacy Typing Mode */}
       {currentMode === GameMode.TYPING && (
-        <Typing libraries={libraries} onFinish={refreshData} />
+        <Typing 
+            libraries={[...libraries, ...OFFICIAL_LIBRARIES]} 
+            onFinish={refreshData} 
+            initialLibraryId={targetLibraryId}
+        />
       )}
 
       {/* New Classroom Mode */}
       {currentMode === GameMode.CLASSROOM && (
-        <Lesson />
+        <Lesson libraries={libraries} />
       )}
 
       {currentMode === GameMode.VIDEO_MAKER && (
@@ -127,6 +144,7 @@ const App: React.FC = () => {
             libraries={libraries} 
             onAddLibrary={handleAddLibrary} 
             onDeleteLibrary={handleDeleteLibrary}
+            onStartLibrary={handleStartLibrary}
         />
       )}
 
